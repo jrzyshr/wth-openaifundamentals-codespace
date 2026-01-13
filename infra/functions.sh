@@ -1,8 +1,23 @@
+function authenticate_to_azure {
+    # Authenticate with Azure
+    if [[ "$USE_SERVICE_PRINCIPAL" == true ]]; then
+        if [[ -z "$TENANT_ID" || -z "$SERVICE_PRINCIPAL_ID" || -z "$SERVICE_PRINCIPAL_PASSWORD" ]]; then
+            error_exit "Service Principal ID, Password, and Tenant ID are required for Service Principal authentication."
+        fi
+        if ! az account show > /dev/null 2>&1; then
+            az login --service-principal -u "$SERVICE_PRINCIPAL_ID" -p "$SERVICE_PRINCIPAL_PASSWORD" --tenant "$TENANT_ID" || error_exit "Failed to authenticate using Service Principal."
+        fi
+    else
+        if ! az account show > /dev/null 2>&1; then
+            az login || error_exit "Failed to authenticate with Azure."
+        fi
+    fi
+}
 # Processes named command-line arguments into variables.
 parse_args() {
     # $1 - The associative array name containing the argument definitions and default values
     # $2 - The arguments passed to the script
-    local -n arg_defs=$1
+    local -n arg_defs=$1 # this won't work by default on the Mac zsh shell, but works in bash. brew install bash and then /opt/homebrew/bin/bash ./deploy.sh to use it. 
     shift
     local args=("$@")
 
